@@ -43,5 +43,5 @@
         │                (multilingual, verified, accessibility-first)
         │
         └───────────────► [Verification Anchors]
-                         (hashes/Merkle roots on Solana)
+                         (Hashes on Solana)
 ```
