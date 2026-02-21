@@ -58,7 +58,7 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 
-#define DHT11_Pin GPIO_PIN_13
+#define DHT11_Pin GPIO_PIN_11
 #define DHT11_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */

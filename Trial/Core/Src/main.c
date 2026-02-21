@@ -205,7 +205,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   DWT_Delay_Init();
-  printf("DHT11 ready (NUCLEO-F756ZG, D3=PE13)\r\n");
+  printf("DHT11 ready (NUCLEO-F756ZG, D5=PE11)\r\n");
 
   /* USER CODE END 2 */
 
