@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useCallback, useEffect } from "react";
-import Map, { useMap, type MapRef, type ViewStateChangeEvent, type MapMouseEvent } from "react-map-gl/mapbox";
+import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent } from "react-map-gl/mapbox";
+import type mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useSensors } from "@/hooks/use-sensors";
 import { useMapStore, REGION_PRESETS } from "@/lib/stores/map-store";
@@ -13,10 +14,18 @@ import { MapFilterBar } from "./map-filter-bar";
 import { MapControls } from "./map-controls";
 import { SatelliteLayerControl } from "./satellite-layer-control";
 import { SensorDetailPanel } from "./sensor-detail-panel";
+import { MapLegend } from "./map-legend";
 import { ErrorState } from "@/components/shared/error-state";
 import { MapLoadingSkeleton } from "@/components/skeletons";
+import { GridLayer } from "./layers/grid-layer";
+import { RegionOverlayLayer } from "./layers/region-overlay-layer";
+import { CambodiaGridLayer } from "./layers/cambodia-grid-layer";
+import { GridLayerControl } from "./grid-layer-control";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+// Remove the custom dark satellite style in favor of a clean standard style
+const CLEAN_DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
 
 function SensorMapInner() {
   const mapRef = useRef<MapRef>(null);
@@ -125,9 +134,10 @@ function SensorMapInner() {
           const sensor = MOCK_SENSORS.find((s) => s.id === props.id) ?? null;
           setSelectedSensor(sensor);
         }
-      } else {
-        setSelectedSensor(null);
+        return;
       }
+
+      setSelectedSensor(null);
     },
     [setSelectedSensor]
   );
@@ -136,11 +146,12 @@ function SensorMapInner() {
     const map = mapRef.current;
     if (!map || !map.getLayer("sensor-circles")) return;
 
+    // Check sensors first — they take priority
     const features = map.queryRenderedFeatures(evt.point, {
       layers: ["sensor-circles"],
     });
 
-    // Clear previous hover
+    // Clear previous sensor hover
     if (hoveredIdRef.current !== null) {
       map.setFeatureState(
         { source: "sensors", id: hoveredIdRef.current },
@@ -175,6 +186,7 @@ function SensorMapInner() {
       );
       hoveredIdRef.current = null;
     }
+
     map.getCanvas().style.cursor = "";
   }, []);
 
@@ -197,13 +209,19 @@ function SensorMapInner() {
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
         mapboxAccessToken={MAPBOX_TOKEN}
-        mapStyle="mapbox://styles/mapbox/standard"
+        mapStyle={CLEAN_DARK_STYLE}
+        projection="mercator"
+        maxPitch={0}
         reuseMaps
         style={{ width: "100%", height: "100%" }}
       >
         <SatelliteLayers />
+        <GridLayer />
+        <RegionOverlayLayer />
         <SensorLayer sensors={sensors ?? []} />
+        <CambodiaGridLayer />
       </Map>
+      <GridLayerControl />
       <MapFilterBar filter={filter} onFilterChange={setFilter} />
       <MapControls />
       <SatelliteLayerControl
@@ -211,6 +229,7 @@ function SensorMapInner() {
         onToggle={toggleSatelliteLayer}
         onOpacityChange={setSatelliteOpacity}
       />
+      <MapLegend />
       {selectedSensor && (
         <SensorDetailPanel
           sensor={selectedSensor}

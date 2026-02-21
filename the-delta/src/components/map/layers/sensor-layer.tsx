@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Source, Layer } from "react-map-gl/mapbox";
-import type { CircleLayerSpecification, SymbolLayerSpecification } from "mapbox-gl";
+import type { CircleLayerSpecification, SymbolLayerSpecification, HeatmapLayerSpecification } from "mapbox-gl";
 import { sensorsToGeoJSON, STATUS_COLORS } from "@/lib/utils/geo";
 import type { Sensor } from "@/lib/types";
 
@@ -10,18 +10,64 @@ interface SensorLayerProps {
   sensors: Sensor[];
 }
 
+const HEATMAP_LAYER: HeatmapLayerSpecification = {
+  id: "sensor-heatmap",
+  type: "heatmap",
+  source: "sensors",
+  maxzoom: 12,
+  paint: {
+    "heatmap-weight": 1,
+    "heatmap-intensity": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      0, 1,
+      12, 3
+    ],
+    "heatmap-color": [
+      "interpolate",
+      ["linear"],
+      ["heatmap-density"],
+      0, "rgba(0,0,255,0)",
+      0.2, "rgba(33, 102, 172, 0.4)",
+      0.4, "rgba(67, 147, 195, 0.6)",
+      0.6, "rgba(146, 197, 222, 0.8)",
+      0.8, "rgba(244, 165, 130, 0.9)",
+      1, "rgba(178, 24, 43, 1)"
+    ],
+    "heatmap-radius": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      0, 2,
+      5, 5,
+      12, 25
+    ],
+    "heatmap-opacity": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      4, 0,
+      6, 0.6,
+      9, 1,
+      11, 0.3,
+      12, 0
+    ],
+  },
+};
+
 const sensorCircles: CircleLayerSpecification = {
   id: "sensor-circles",
   type: "circle",
   source: "sensors",
-  slot: "top",
   filter: ["!", ["has", "point_count"]],
+  minzoom: 10,
   paint: {
     "circle-radius": [
       "case",
       ["boolean", ["feature-state", "hover"], false],
-      10,
-      7,
+      12,
+      8,
     ],
     "circle-color": [
       "match",
@@ -32,9 +78,23 @@ const sensorCircles: CircleLayerSpecification = {
       "critical", STATUS_COLORS.critical,
       "#6b7280",
     ],
-    "circle-stroke-color": "#ffffff",
-    "circle-stroke-width": 2,
-    "circle-opacity": 1,
+    "circle-stroke-color": [
+      "match",
+      ["get", "status"],
+      "online", "rgba(34, 197, 94, 0.3)",
+      "warning", "rgba(234, 179, 8, 0.3)",
+      "offline", "rgba(107, 114, 128, 0.3)",
+      "critical", "rgba(239, 68, 68, 0.3)",
+      "rgba(0,0,0,0.6)",
+    ],
+    "circle-stroke-width": 4,
+    "circle-opacity": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      10, 0,
+      11, 0.9
+    ] as any,
   },
 };
 
@@ -42,25 +102,33 @@ const sensorClusters: CircleLayerSpecification = {
   id: "sensor-clusters",
   type: "circle",
   source: "sensors",
-  slot: "top",
   filter: ["has", "point_count"],
+  minzoom: 8,
   paint: {
     "circle-color": [
       "step",
       ["get", "point_count"],
-      "#60a5fa", // < 10
-      10, "#3b82f6", // 10–29
-      30, "#1d4ed8", // 30+
+      "rgba(96, 165, 250, 0.8)",
+      10, "rgba(59, 130, 246, 0.8)",
+      30, "rgba(29, 78, 216, 0.8)",
     ],
     "circle-radius": [
       "step",
       ["get", "point_count"],
-      18, // < 10
-      10, 20, // 10–29
-      30, 24, // 30+
+      20,
+      10, 24,
+      30, 28,
     ],
-    "circle-stroke-color": "#ffffff",
-    "circle-stroke-width": 2,
+    "circle-stroke-color": "rgba(96, 165, 250, 0.3)",
+    "circle-stroke-width": 6,
+    "circle-opacity": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      8, 0,
+      9, 0.8,
+      12, 1
+    ] as any,
   },
 };
 
@@ -68,15 +136,23 @@ const clusterCount: SymbolLayerSpecification = {
   id: "sensor-cluster-count",
   type: "symbol",
   source: "sensors",
-  slot: "top",
   filter: ["has", "point_count"],
+  minzoom: 8,
   layout: {
     "text-field": ["get", "point_count_abbreviated"],
-    "text-size": 12,
+    "text-size": 13,
     "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
   },
   paint: {
     "text-color": "#ffffff",
+    "text-opacity": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      8, 0,
+      9, 0.8,
+      12, 1
+    ] as any,
   },
 };
 
@@ -93,6 +169,7 @@ export function SensorLayer({ sensors }: SensorLayerProps) {
       clusterRadius={50}
       promoteId="id"
     >
+      <Layer {...HEATMAP_LAYER} />
       <Layer {...sensorCircles} />
       <Layer {...sensorClusters} />
       <Layer {...clusterCount} />

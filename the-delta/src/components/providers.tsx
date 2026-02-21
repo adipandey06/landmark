@@ -2,7 +2,6 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { RoleProvider } from "@/contexts/role-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -20,9 +19,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RoleProvider>
         <TooltipProvider>{children}</TooltipProvider>
-      </RoleProvider>
     </QueryClientProvider>
   );
 }

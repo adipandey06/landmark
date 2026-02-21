@@ -22,21 +22,14 @@ import { formatDateTime, timeAgo, truncateHash } from "@/lib/utils/format";
 import type { AuditFilter, AuditEventType } from "@/lib/types";
 import {
   Activity,
-  AlertTriangle,
-  Settings,
-  Wrench,
-  Bell,
   GitBranch,
   ShieldCheck,
   Download,
 } from "lucide-react";
+import { InfoBanner } from "@/components/layout/info-banner";
 
 const EVENT_ICONS: Record<AuditEventType, React.ElementType> = {
   "sensor-reading": Activity,
-  "risk-assessment": AlertTriangle,
-  calibration: Settings,
-  maintenance: Wrench,
-  alert: Bell,
   "merkle-root": GitBranch,
   verification: ShieldCheck,
 };
@@ -83,6 +76,10 @@ export default function AuditPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
+      <InfoBanner>
+        Data is only useful if you can trust it. The Audit Trail acts as an unchangeable digital logbook. We use Solana blockchain technology to take a "digital fingerprint" of our data at regular intervals. This guarantees that once a sensor records a measurement, it can never be tampered with or secretly changed by anyone. It is your automated stamp of trust and truth.
+      </InfoBanner>
+
       <SectionHeading
         number="04"
         title="Audit Trail"
@@ -166,11 +163,7 @@ export default function AuditPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="sensor-reading">Sensor Reading</SelectItem>
-                <SelectItem value="risk-assessment">Risk Assessment</SelectItem>
-                <SelectItem value="calibration">Calibration</SelectItem>
-                <SelectItem value="maintenance">Maintenance</SelectItem>
-                <SelectItem value="alert">Alert</SelectItem>
+                <SelectItem value="sensor-reading">LP Board Reading</SelectItem>
                 <SelectItem value="merkle-root">Merkle Root</SelectItem>
                 <SelectItem value="verification">Verification</SelectItem>
               </SelectContent>

@@ -1,9 +1,5 @@
 export type AuditEventType =
   | "sensor-reading"
-  | "risk-assessment"
-  | "calibration"
-  | "maintenance"
-  | "alert"
   | "merkle-root"
   | "verification";
 

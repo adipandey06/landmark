@@ -10,44 +10,18 @@ import { MOCK_SENSORS } from "./sensors";
 
 const EVENT_TYPES: AuditEventType[] = [
   "sensor-reading",
-  "risk-assessment",
-  "calibration",
-  "maintenance",
-  "alert",
   "merkle-root",
   "verification",
 ];
 
 const DESCRIPTIONS: Record<AuditEventType, string[]> = {
   "sensor-reading": [
-    "Sensor data batch recorded and hashed",
-    "Water quality metrics captured from distribution network",
-    "Flow rate measurements aggregated for verification",
-    "Environmental sensor readings logged",
-  ],
-  "risk-assessment": [
-    "AI risk model assessment completed and verified",
-    "Contamination risk evaluation processed",
-    "Infrastructure failure probability recalculated",
-    "Regional risk profile updated by ML pipeline",
-  ],
-  calibration: [
-    "Sensor calibration check completed — within tolerance",
-    "pH sensor recalibrated — drift corrected",
-    "Turbidity sensor baseline adjusted",
-    "Flow meter calibration verified",
-  ],
-  maintenance: [
-    "Scheduled maintenance completed on pump station",
-    "Filter replacement logged at treatment plant",
-    "Pipe section inspection documented",
-    "Emergency repair on distribution valve",
-  ],
-  alert: [
-    "Critical contamination alert triggered",
-    "Pressure anomaly detected in transmission line",
-    "Water level below minimum threshold",
-    "Sensor offline for >2 hours — alert escalated",
+    "LP Board reading anchored: Temp 22.4°C, Hum 45.2%, pH 6.8",
+    "LP Board reading anchored: Temp 24.1°C, Hum 50.1%, pH 7.1",
+    "LP Board reading anchored: Temp 25.8°C, Hum 55.4%, pH 7.0",
+    "LP Board reading anchored: Temp 21.9°C, Hum 42.8%, pH 6.5",
+    "LP Board reading anchored: Temp 23.5°C, Hum 48.7%, pH 6.9",
+    "LP Board reading anchored: Temp 26.2°C, Hum 60.3%, pH 7.2",
   ],
   "merkle-root": [
     "Hourly Merkle root published to Solana",
@@ -56,7 +30,7 @@ const DESCRIPTIONS: Record<AuditEventType, string[]> = {
     "Cross-region Merkle tree root finalized",
   ],
   verification: [
-    "On-chain verification confirmed for sensor batch",
+    "On-chain verification confirmed for LP Board batch",
     "Blockchain proof validated against local hash",
     "Transaction confirmation received from Solana",
     "Audit proof cross-checked — integrity verified",

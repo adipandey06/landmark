@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { TopNav } from "./top-nav";
 import { Sidebar } from "./sidebar";
 
-const COLLAPSED_KEY = "delta-sidebar-collapsed";
+const COLLAPSED_KEY = "landmark-sidebar-collapsed";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -39,11 +39,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main
         className={cn(
           "min-h-screen pt-14 transition-all duration-200",
-          collapsed ? "md:pl-16" : "md:pl-60",
-          isMapRoute ? "p-0" : "p-4 md:p-8"
+          collapsed ? "md:pl-16" : "md:pl-60"
         )}
       >
-        {children}
+        <div className={cn("h-full max-w-full", isMapRoute ? "p-0" : "p-4 md:p-8")}>
+          {children}
+        </div>
       </main>
     </>
   );

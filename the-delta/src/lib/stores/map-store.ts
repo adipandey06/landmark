@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { SensorFilter, SatelliteLayer, Sensor } from "@/lib/types";
 import { SATELLITE_LAYERS } from "@/lib/mock-data/satellite";
+import type { PaletteKey } from "@/lib/utils/color-scales";
 
 export type Region = "global" | "sub-saharan-africa" | "south-asia" | "southeast-asia";
 
@@ -13,7 +14,7 @@ interface RegionPreset {
 }
 
 const REGION_PRESETS: Record<Region, RegionPreset> = {
-  global: { longitude: 40, latitude: 10, zoom: 2.5, pitch: 45, bearing: -17 },
+  global: { longitude: 40, latitude: 10, zoom: 2.5, pitch: 0, bearing: 0 },
   "sub-saharan-africa": { longitude: 25, latitude: 0, zoom: 4 },
   "south-asia": { longitude: 78, latitude: 22, zoom: 4.5 },
   "southeast-asia": { longitude: 110, latitude: 5, zoom: 4.5 },
@@ -31,8 +32,8 @@ const INITIAL_VIEW: ViewState = {
   longitude: 40,
   latitude: 10,
   zoom: 2.5,
-  pitch: 45,
-  bearing: -17,
+  pitch: 0,
+  bearing: 0,
 };
 
 interface MapStore {
@@ -58,6 +59,21 @@ interface MapStore {
   satelliteLayers: SatelliteLayer[];
   toggleSatelliteLayer: (id: string) => void;
   setSatelliteOpacity: (id: string, opacity: number) => void;
+
+  // Choropleth overlay
+  activePalette: PaletteKey;
+  setActivePalette: (p: PaletteKey) => void;
+  overlayOpacity: number;
+  setOverlayOpacity: (o: number) => void;
+  overlayVisible: boolean;
+  toggleOverlay: () => void;
+  legendOpen: boolean;
+  toggleLegend: () => void;
+  // Grid dataset
+  gridVisible: boolean;
+  toggleGridVisible: () => void;
+  gridMetric: string;
+  setGridMetric: (m: string) => void;
 }
 
 export const useMapStore = create<MapStore>((set, get) => ({
@@ -99,6 +115,20 @@ export const useMapStore = create<MapStore>((set, get) => ({
         l.id === id ? { ...l, opacity } : l
       ),
     }),
+
+  activePalette: "risk",
+  setActivePalette: (p) => set({ activePalette: p }),
+  overlayOpacity: 0.6,
+  setOverlayOpacity: (o) => set({ overlayOpacity: o }),
+  overlayVisible: true,
+  toggleOverlay: () => set({ overlayVisible: !get().overlayVisible }),
+  legendOpen: true,
+  toggleLegend: () => set({ legendOpen: !get().legendOpen }),
+
+  gridVisible: false,
+  toggleGridVisible: () => set({ gridVisible: !get().gridVisible }),
+  gridMetric: "riskLevel",
+  setGridMetric: (m) => set({ gridMetric: m }),
 }));
 
 export { REGION_PRESETS, INITIAL_VIEW };

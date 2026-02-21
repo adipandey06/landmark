@@ -24,7 +24,6 @@ export function SatelliteLayers() {
           <Layer
             id={`satellite-layer-${layer.id}`}
             type="raster"
-            slot="bottom"
             paint={{ "raster-opacity": layer.opacity }}
           />
         </Source>

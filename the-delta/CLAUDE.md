@@ -1,4 +1,4 @@
-# The Delta — Project Context
+# Landmark — Project Context
 
 Soil & water infrastructure intelligence platform. Fuses NASA satellite imagery with IoT sensor ground truth for monitoring across Sub-Saharan Africa, South Asia, and Southeast Asia. Built for HackLondon.
 
@@ -13,13 +13,13 @@ Soil & water infrastructure intelligence platform. Fuses NASA satellite imagery 
 
 ## Routes (5)
 
-| Route | Page file | Purpose |
-|---|---|---|
-| `/` | `src/app/page.tsx` | Overview dashboard with hero, stats, advisories |
-| `/map` | `src/app/map/page.tsx` | Mapbox GL sensor map with native clustering, satellite overlays, 3D pitch |
+| Route        | Page file                    | Purpose                                                                      |
+| ------------ | ---------------------------- | ---------------------------------------------------------------------------- |
+| `/`          | `src/app/page.tsx`           | Overview dashboard with hero, stats, advisories                              |
+| `/map`       | `src/app/map/page.tsx`       | Mapbox GL sensor map with native clustering, satellite overlays, 3D pitch    |
 | `/satellite` | `src/app/satellite/page.tsx` | Satellite intelligence: fusion scores, coverage, soil moisture, gap timeline |
-| `/risk` | `src/app/risk/page.tsx` | AI risk assessments with forecasts and correlations |
-| `/audit` | `src/app/audit/page.tsx` | Blockchain-verified audit trail |
+| `/risk`      | `src/app/risk/page.tsx`      | AI risk assessments with forecasts and correlations                          |
+| `/audit`     | `src/app/audit/page.tsx`     | Blockchain-verified audit trail                                              |
 
 ## Architecture
 

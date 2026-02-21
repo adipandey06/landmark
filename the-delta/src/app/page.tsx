@@ -3,14 +3,17 @@
 import { SectionHeading } from "@/components/layout/section-heading";
 import { HeroSection } from "@/components/overview/hero-section";
 import { GlobalStatsGrid } from "@/components/overview/global-stats-grid";
-import { RecentAdvisories } from "@/components/overview/recent-advisories";
+import { RiskTrendsChart } from "@/components/overview/risk-trends-chart";
 import { RegionSummaryCards } from "@/components/overview/region-summary-cards";
-import { RoleSpecificSection } from "@/components/overview/role-specific-section";
 import { VerificationSummary } from "@/components/overview/verification-summary";
+import { InfoBanner } from "@/components/layout/info-banner";
 
 export default function OverviewPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-10">
+      <InfoBanner>
+        Think of this as your Mission Control. The Overview gives you a quick snapshot of everything happening right now. It highlights the most important alerts and summary statistics, allowing you to see the overall health of the land and water at a single glance without having to dig into the details.
+      </InfoBanner>
       <HeroSection />
 
       <section>
@@ -25,10 +28,10 @@ export default function OverviewPage() {
       <section>
         <SectionHeading
           number="02"
-          title="Recent Advisories"
-          subtitle="Latest AI-generated risk assessments"
+          title="Data Analytics"
+          subtitle="Aggregated risk trends over time"
         />
-        <RecentAdvisories />
+        <RiskTrendsChart />
       </section>
 
       <section>
@@ -43,15 +46,6 @@ export default function OverviewPage() {
       <section>
         <SectionHeading
           number="04"
-          title="Role Insights"
-          subtitle="Tailored intelligence for your role"
-        />
-        <RoleSpecificSection />
-      </section>
-
-      <section>
-        <SectionHeading
-          number="05"
           title="Verification Status"
           subtitle="Blockchain-anchored data integrity"
         />

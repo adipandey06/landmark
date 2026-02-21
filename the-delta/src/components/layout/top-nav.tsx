@@ -1,6 +1,5 @@
 "use client";
 
-import { RoleSwitcher } from "@/components/shared/role-switcher";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 
@@ -23,14 +22,13 @@ export function TopNav({ onMenuClick }: TopNavProps) {
         </Button>
         <div className="flex items-center gap-2">
           <span className="font-mono text-lg font-bold tracking-[0.2em] text-primary">
-            THE DELTA
+            LANDMARK
           </span>
           <span className="hidden font-mono text-[10px] uppercase tracking-widest text-muted-foreground sm:inline">
             Water Intelligence
           </span>
         </div>
       </div>
-      <RoleSwitcher />
     </header>
   );
 }

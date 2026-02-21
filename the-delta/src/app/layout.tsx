@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Delta — Water Infrastructure Intelligence",
+  title: "Landmark — Water Infrastructure Intelligence",
   description:
     "Real-time sensor data, AI risk assessments, and blockchain-verified audit trails for global water infrastructure.",
 };

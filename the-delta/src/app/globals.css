@@ -45,9 +45,9 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  --color-delta-blue: var(--delta-blue);
-  --color-delta-teal: var(--delta-teal);
-  --color-delta-navy: var(--delta-navy);
+  --color-landmark-blue: var(--landmark-blue);
+  --color-landmark-teal: var(--landmark-teal);
+  --color-landmark-navy: var(--landmark-navy);
   --color-status-online: var(--status-online);
   --color-status-warning: var(--status-warning);
   --color-status-offline: var(--status-offline);
@@ -91,9 +91,9 @@
   --sidebar-accent-foreground: oklch(0.25 0.05 245);
   --sidebar-border: oklch(0.91 0.01 247);
   --sidebar-ring: oklch(0.45 0.12 245);
-  --delta-blue: oklch(0.55 0.18 245);
-  --delta-teal: oklch(0.6 0.15 185);
-  --delta-navy: oklch(0.25 0.08 250);
+  --landmark-blue: oklch(0.55 0.18 245);
+  --landmark-teal: oklch(0.6 0.15 185);
+  --landmark-navy: oklch(0.25 0.08 250);
   --status-online: oklch(0.65 0.2 150);
   --status-warning: oklch(0.75 0.18 80);
   --status-offline: oklch(0.55 0.02 250);
