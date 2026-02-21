@@ -4,6 +4,7 @@ export interface SensorGeoJSON {
   type: "FeatureCollection";
   features: Array<{
     type: "Feature";
+    id: string;
     geometry: {
       type: "Point";
       coordinates: [number, number];
@@ -24,6 +25,7 @@ export function sensorsToGeoJSON(sensors: Sensor[]): SensorGeoJSON {
     type: "FeatureCollection",
     features: sensors.map((sensor) => ({
       type: "Feature" as const,
+      id: sensor.id,
       geometry: {
         type: "Point" as const,
         coordinates: [sensor.coordinates.lng, sensor.coordinates.lat],

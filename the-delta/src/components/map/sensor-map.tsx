@@ -1,85 +1,181 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  CircleMarker,
-  ZoomControl,
-  Popup,
-} from "react-leaflet";
-import MarkerClusterGroup from "react-leaflet-cluster";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useRef, useCallback, useEffect } from "react";
+import Map, { useMap, type MapRef, type ViewStateChangeEvent, type MapMouseEvent } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { useSensors } from "@/hooks/use-sensors";
-import { STATUS_COLORS } from "@/lib/utils/geo";
-import type { SensorFilter, Sensor, SatelliteLayer } from "@/lib/types";
+import { useMapStore, REGION_PRESETS } from "@/lib/stores/map-store";
+import type { Sensor } from "@/lib/types";
+import { MOCK_SENSORS } from "@/lib/mock-data/sensors";
+import { SatelliteLayers } from "./layers/satellite-layers";
+import { SensorLayer } from "./layers/sensor-layer";
 import { MapFilterBar } from "./map-filter-bar";
-import { SensorDetailPanel } from "./sensor-detail-panel";
+import { MapControls } from "./map-controls";
 import { SatelliteLayerControl } from "./satellite-layer-control";
+import { SensorDetailPanel } from "./sensor-detail-panel";
 import { ErrorState } from "@/components/shared/error-state";
 import { MapLoadingSkeleton } from "@/components/skeletons";
-import { SATELLITE_LAYERS } from "@/lib/mock-data/satellite";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function createClusterIcon(cluster: any) {
-  const count = cluster.getChildCount();
-  let bg = "#60a5fa";
-  let size = 36;
-  if (count >= 30) {
-    bg = "#1d4ed8";
-    size = 48;
-  } else if (count >= 10) {
-    bg = "#3b82f6";
-    size = 40;
-  }
-  return L.divIcon({
-    html: `<div style="background:${bg};color:#fff;width:${size}px;height:${size}px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)">${count}</div>`,
-    className: "",
-    iconSize: L.point(size, size),
-  });
-}
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-function SatelliteTileLayers({
-  layers,
-}: {
-  layers: SatelliteLayer[];
-}) {
-  const visibleLayers = layers.filter((l) => l.visible);
-  const today = new Date().toISOString().split("T")[0];
+function SensorMapInner() {
+  const mapRef = useRef<MapRef>(null);
+  const hoveredIdRef = useRef<string | null>(null);
 
-  return (
-    <>
-      {visibleLayers.map((layer) => (
-        <TileLayer
-          key={layer.id}
-          url={layer.sourceUrl.replace("{Date}", today)}
-          opacity={layer.opacity}
-          attribution="NASA GIBS"
-        />
-      ))}
-    </>
-  );
-}
+  const viewState = useMapStore((s) => s.viewState);
+  const setViewState = useMapStore((s) => s.setViewState);
+  const activeRegion = useMapStore((s) => s.activeRegion);
+  const selectedSensor = useMapStore((s) => s.selectedSensor);
+  const setSelectedSensor = useMapStore((s) => s.setSelectedSensor);
+  const filter = useMapStore((s) => s.filter);
+  const setFilter = useMapStore((s) => s.setFilter);
+  const satelliteLayers = useMapStore((s) => s.satelliteLayers);
+  const toggleSatelliteLayer = useMapStore((s) => s.toggleSatelliteLayer);
+  const setSatelliteOpacity = useMapStore((s) => s.setSatelliteOpacity);
 
-export function SensorMap() {
-  const [filter, setFilter] = useState<SensorFilter>({});
-  const [selectedSensor, setSelectedSensor] = useState<Sensor | null>(null);
-  const [satelliteLayers, setSatelliteLayers] = useState<SatelliteLayer[]>(
-    SATELLITE_LAYERS.map((l) => ({ ...l }))
-  );
   const { data: sensors, isLoading, isError, refetch } = useSensors(filter);
 
-  const handleToggleLayer = useCallback((id: string) => {
-    setSatelliteLayers((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l))
-    );
+  // Region flyTo
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const preset = REGION_PRESETS[activeRegion];
+    map.flyTo({
+      center: [preset.longitude, preset.latitude],
+      zoom: preset.zoom,
+      pitch: preset.pitch ?? 0,
+      bearing: preset.bearing ?? 0,
+      duration: 1500,
+    });
+  }, [activeRegion]);
+
+  // WebGL context loss handling
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const canvas = map.getCanvas();
+
+    const onContextLost = (e: Event) => {
+      e.preventDefault();
+      console.warn("WebGL context lost");
+    };
+    const onContextRestored = () => {
+      console.info("WebGL context restored");
+    };
+
+    canvas.addEventListener("webglcontextlost", onContextLost);
+    canvas.addEventListener("webglcontextrestored", onContextRestored);
+    return () => {
+      canvas.removeEventListener("webglcontextlost", onContextLost);
+      canvas.removeEventListener("webglcontextrestored", onContextRestored);
+    };
   }, []);
 
-  const handleOpacityChange = useCallback((id: string, opacity: number) => {
-    setSatelliteLayers((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, opacity } : l))
-    );
+  const onMove = useCallback(
+    (evt: ViewStateChangeEvent) => {
+      setViewState(evt.viewState);
+    },
+    [setViewState]
+  );
+
+  const onClick = useCallback(
+    (evt: MapMouseEvent) => {
+      const map = mapRef.current;
+      if (!map) return;
+
+      // Guard: layers may not exist yet during initial load
+      if (!map.getLayer("sensor-clusters") || !map.getLayer("sensor-circles")) return;
+
+      // Check clusters first
+      const clusterFeatures = map.queryRenderedFeatures(evt.point, {
+        layers: ["sensor-clusters"],
+      });
+      if (clusterFeatures.length > 0) {
+        const feature = clusterFeatures[0];
+        const clusterId = feature.properties?.cluster_id;
+        const source = map.getSource("sensors");
+        if (source && "getClusterExpansionZoom" in source) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (source as any).getClusterExpansionZoom(
+            clusterId,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (err: any, zoom: any) => {
+              if (err || zoom == null) return;
+              const geom = feature.geometry;
+              if (geom.type === "Point") {
+                map.flyTo({
+                  center: geom.coordinates as [number, number],
+                  zoom,
+                  duration: 500,
+                });
+              }
+            }
+          );
+        }
+        return;
+      }
+
+      // Check individual sensors
+      const sensorFeatures = map.queryRenderedFeatures(evt.point, {
+        layers: ["sensor-circles"],
+      });
+      if (sensorFeatures.length > 0) {
+        const props = sensorFeatures[0].properties;
+        if (props?.id) {
+          const sensor = MOCK_SENSORS.find((s) => s.id === props.id) ?? null;
+          setSelectedSensor(sensor);
+        }
+      } else {
+        setSelectedSensor(null);
+      }
+    },
+    [setSelectedSensor]
+  );
+
+  const onMouseMove = useCallback((evt: MapMouseEvent) => {
+    const map = mapRef.current;
+    if (!map || !map.getLayer("sensor-circles")) return;
+
+    const features = map.queryRenderedFeatures(evt.point, {
+      layers: ["sensor-circles"],
+    });
+
+    // Clear previous hover
+    if (hoveredIdRef.current !== null) {
+      map.setFeatureState(
+        { source: "sensors", id: hoveredIdRef.current },
+        { hover: false }
+      );
+    }
+
+    if (features.length > 0) {
+      const id = features[0].properties?.id ?? null;
+      if (id) {
+        hoveredIdRef.current = id;
+        map.setFeatureState(
+          { source: "sensors", id },
+          { hover: true }
+        );
+        map.getCanvas().style.cursor = "pointer";
+      }
+    } else {
+      hoveredIdRef.current = null;
+      map.getCanvas().style.cursor = "";
+    }
+  }, []);
+
+  const onMouseLeave = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (hoveredIdRef.current !== null) {
+      map.setFeatureState(
+        { source: "sensors", id: hoveredIdRef.current },
+        { hover: false }
+      );
+      hoveredIdRef.current = null;
+    }
+    map.getCanvas().style.cursor = "";
   }, []);
 
   if (isLoading) return <MapLoadingSkeleton />;
@@ -93,51 +189,27 @@ export function SensorMap() {
 
   return (
     <div className="relative h-[calc(100vh-3.5rem)]">
-      <MapContainer
-        center={[10, 40]}
-        zoom={2.5}
-        zoomControl={false}
-        className="h-full w-full"
-        style={{ background: "#f8fafc" }}
+      <Map
+        ref={mapRef}
+        {...viewState}
+        onMove={onMove}
+        onClick={onClick}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        mapboxAccessToken={MAPBOX_TOKEN}
+        mapStyle="mapbox://styles/mapbox/standard"
+        reuseMaps
+        style={{ width: "100%", height: "100%" }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <SatelliteTileLayers layers={satelliteLayers} />
-        <ZoomControl position="bottomright" />
-        <MarkerClusterGroup
-          chunkedLoading
-          maxClusterRadius={50}
-          iconCreateFunction={createClusterIcon}
-        >
-          {sensors?.map((sensor) => (
-            <CircleMarker
-              key={sensor.id}
-              center={[sensor.coordinates.lat, sensor.coordinates.lng]}
-              radius={7}
-              pathOptions={{
-                fillColor: STATUS_COLORS[sensor.status] ?? "#6b7280",
-                color: "#ffffff",
-                weight: 2,
-                fillOpacity: 1,
-              }}
-              eventHandlers={{
-                click: () => setSelectedSensor(sensor),
-              }}
-            >
-              <Popup>
-                <span className="font-mono text-xs">{sensor.name}</span>
-              </Popup>
-            </CircleMarker>
-          ))}
-        </MarkerClusterGroup>
-      </MapContainer>
+        <SatelliteLayers />
+        <SensorLayer sensors={sensors ?? []} />
+      </Map>
       <MapFilterBar filter={filter} onFilterChange={setFilter} />
+      <MapControls />
       <SatelliteLayerControl
         layers={satelliteLayers}
-        onToggle={handleToggleLayer}
-        onOpacityChange={handleOpacityChange}
+        onToggle={toggleSatelliteLayer}
+        onOpacityChange={setSatelliteOpacity}
       />
       {selectedSensor && (
         <SensorDetailPanel
@@ -147,4 +219,8 @@ export function SensorMap() {
       )}
     </div>
   );
+}
+
+export function SensorMap() {
+  return <SensorMapInner />;
 }
