@@ -11,14 +11,16 @@ import secrets as app_secrets
 
 try:
     from solana.rpc.api import Client as SolanaClient
-    from solana.transaction import Transaction
     from solders.instruction import Instruction
+    from solders.message import Message
     from solders.keypair import Keypair
     from solders.pubkey import Pubkey
+    from solders.transaction import Transaction
 except ImportError:
     SolanaClient = None
     Transaction = None
     Instruction = None
+    Message = None
     Keypair = None
     Pubkey = None
 
@@ -70,7 +72,14 @@ def compute_modified_hash(actual_hash_hex):
 
 
 def anchor_hash_on_solana(actual_hash_hex):
-    if SolanaClient is None or Transaction is None or Keypair is None or Pubkey is None or Instruction is None:
+    if (
+        SolanaClient is None
+        or Transaction is None
+        or Keypair is None
+        or Pubkey is None
+        or Instruction is None
+        or Message is None
+    ):
         raise RuntimeError("Missing Solana dependencies. Install 'solana' and 'solders'.")
 
     if not SOLANA_PRIVATE_KEY_B58:
@@ -86,8 +95,11 @@ def anchor_hash_on_solana(actual_hash_hex):
         accounts=[],
     )
 
-    tx = Transaction().add(memo_instruction)
-    send_resp = client.send_transaction(tx, payer)
+    latest = client.get_latest_blockhash()
+    recent_blockhash = latest.value.blockhash
+    message = Message([memo_instruction], payer.pubkey())
+    tx = Transaction([payer], message, recent_blockhash)
+    send_resp = client.send_transaction(tx)
     if getattr(send_resp, "value", None) is None:
         raise RuntimeError(f"Solana RPC error: {send_resp}")
 
