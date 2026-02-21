@@ -5,7 +5,7 @@ Soil & water infrastructure intelligence platform. Fuses NASA satellite imagery 
 ## Stack
 
 - **Framework:** Next.js 16.1.6 (App Router), React 19, TypeScript 5
-- **Map:** Leaflet + react-leaflet + react-leaflet-cluster (OSM tiles, no API key)
+- **Map:** Mapbox GL JS v3 + react-map-gl v7 (Standard style, 3D terrain, GPU clustering)
 - **Charts:** Recharts 3.7
 - **UI:** Radix UI (shadcn pattern), Tailwind CSS 4, Lucide icons, Geist font
 - **State:** Zustand 5, TanStack React Query 5
@@ -16,7 +16,7 @@ Soil & water infrastructure intelligence platform. Fuses NASA satellite imagery 
 | Route | Page file | Purpose |
 |---|---|---|
 | `/` | `src/app/page.tsx` | Overview dashboard with hero, stats, advisories |
-| `/map` | `src/app/map/page.tsx` | Leaflet sensor map with clustering, satellite overlays |
+| `/map` | `src/app/map/page.tsx` | Mapbox GL sensor map with native clustering, satellite overlays, 3D pitch |
 | `/satellite` | `src/app/satellite/page.tsx` | Satellite intelligence: fusion scores, coverage, soil moisture, gap timeline |
 | `/risk` | `src/app/risk/page.tsx` | AI risk assessments with forecasts and correlations |
 | `/audit` | `src/app/audit/page.tsx` | Blockchain-verified audit trail |
@@ -29,7 +29,8 @@ src/
 ├── components/
 │   ├── ui/                 # Radix/shadcn primitives (button, card, badge, select, etc.)
 │   ├── layout/             # sidebar.tsx, top-nav.tsx, app-shell.tsx, section-heading.tsx
-│   ├── map/                # sensor-map.tsx, map-filter-bar.tsx, sensor-detail-panel.tsx, satellite-layer-control.tsx
+│   ├── map/                # sensor-map.tsx, map-filter-bar.tsx, sensor-detail-panel.tsx, satellite-layer-control.tsx, map-controls.tsx, map-error-boundary.tsx
+│   │   └── layers/         # satellite-layers.tsx, sensor-layer.tsx
 │   ├── satellite/          # satellite-hero, fusion-score-cards, coverage-analysis, soil-moisture-dashboard, gap-analysis-timeline
 │   ├── charts/             # risk-overview-bar, risk-table, risk-detail-view, forecast-chart, correlation-chart, risk-filter-bar
 │   ├── overview/           # hero-section, global-stats-grid, recent-advisories, region-summary-cards, role-specific-section, verification-summary
@@ -42,6 +43,7 @@ src/
 │   ├── types/              # common.ts, sensor.ts, risk.ts, audit.ts, stats.ts, satellite.ts, index.ts (barrel)
 │   ├── api/                # client.ts, sensors.ts, risks.ts, audit.ts, stats.ts (mock API layer)
 │   ├── mock-data/          # generators.ts, sensors.ts, risks.ts, audit-events.ts, satellite.ts
+│   ├── stores/             # map-store.ts (Zustand)
 │   └── utils/              # format.ts, geo.ts, solana.ts
 └── contexts/               # role-context.tsx
 ```
@@ -62,12 +64,18 @@ src/
 
 ## Map Details
 
-- `sensor-map.tsx` is dynamically imported with `ssr: false` (Leaflet needs `window`)
-- OSM base tiles + optional NASA GIBS satellite overlays (NDVI, SMAP Soil Moisture, GPM Precipitation)
-- Sensors rendered as `CircleMarker` colored by status (green/yellow/gray/red)
-- Clustering via `react-leaflet-cluster` with custom `divIcon`
-- Satellite layer control: collapsible panel bottom-left with toggle + opacity slider per layer
-- Center: `[10, 40]`, zoom: `2.5`
+- `sensor-map.tsx` is dynamically imported with `ssr: false` (Mapbox GL needs `window`)
+- Mapbox Standard style with `dusk` light preset and 3D pitch camera
+- Sensors rendered as Mapbox `circle` layers colored by status via `match` expression
+- Native Mapbox GeoJSON clustering (`cluster: true` on Source) with `step`-based size/color
+- Hover via `feature-state` (GPU-driven, no React re-renders) — radius 7px → 10px
+- Click: `queryRenderedFeatures` for cluster expand / sensor select
+- Satellite layers: NASA GIBS raster tiles in `slot: "bottom"` (below 3D buildings/labels)
+- Sensor layers use `slot: "top"` (above 3D buildings/labels)
+- Custom controls (bottom-right): zoom in/out, reset north, reset view
+- State managed by Zustand store (`src/lib/stores/map-store.ts`)
+- Wrapped in `MapErrorBoundary` for WebGL context loss recovery
+- Requires `NEXT_PUBLIC_MAPBOX_TOKEN` env var
 
 ## Mock Data
 
@@ -92,4 +100,4 @@ npm run build   # All 5 routes compile
 npm run dev     # Dev server on localhost:3000
 ```
 
-No env vars required. The old `NEXT_PUBLIC_MAPBOX_TOKEN` was removed.
+Requires `NEXT_PUBLIC_MAPBOX_TOKEN` in `.env.local` for Mapbox GL map rendering.

@@ -15,7 +15,9 @@
       "Bash(where:*)",
       "Bash(winget install:*)",
       "Bash(export PATH=\"/c/Program Files/GitHub CLI:$PATH\")",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "Bash(find C:\\\\Users\\\\Rex\\\\OneDrive - London School of Economics\\\\Desktop\\\\Hack London\\\\the-delta\\\\src:*)",
+      "Bash(find C:\\\\Users\\\\Rex\\\\OneDrive - London School of Economics\\\\Desktop\\\\Hack London\\\\the-delta\\\\src\\\\lib\\\\mock-data:*)"
     ]
   }
 }
