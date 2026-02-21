@@ -14,7 +14,7 @@
 ## Circuit Diagram
 
 ## Architecture
-
+```
 [Field Sensors & Water Infrastructure]
   - Soil moisture / salinity / temp
   - Flow & pressure sensors
@@ -44,4 +44,4 @@
         │
         └───────────────► [Verification Anchors]
                          (hashes/Merkle roots on Solana)
-
+```
