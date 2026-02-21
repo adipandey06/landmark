@@ -18,4 +18,4 @@ SOLANA_PRIVATE_KEY_B58 = ""
 ANCHOR_REQUIRED = True
 
 # Secret used to derive modified hash from actual hash (HMAC-SHA256)
-HASH_TWEAK_SECRET = "replace-with-long-random-secret"
+HASH_TWEAK_SECRET = "IAmJustBoredAtThisAnnoyingHashingThingyThatIsNotNeeded"
