@@ -11,9 +11,6 @@ import { InfoBanner } from "@/components/layout/info-banner";
 export default function OverviewPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-10">
-      <InfoBanner>
-        Think of this as your Mission Control. The Overview gives you a quick snapshot of everything happening right now. It highlights the most important alerts and summary statistics, allowing you to see the overall health of the land and water at a single glance without having to dig into the details.
-      </InfoBanner>
       <HeroSection />
 
       <section>

@@ -18,7 +18,6 @@ import { MapLegend } from "./map-legend";
 import { ErrorState } from "@/components/shared/error-state";
 import { MapLoadingSkeleton } from "@/components/skeletons";
 import { GridLayer } from "./layers/grid-layer";
-import { RegionOverlayLayer } from "./layers/region-overlay-layer";
 import { CambodiaGridLayer } from "./layers/cambodia-grid-layer";
 import { GridLayerControl } from "./grid-layer-control";
 
@@ -217,7 +216,6 @@ function SensorMapInner() {
       >
         <SatelliteLayers />
         <GridLayer />
-        <RegionOverlayLayer />
         <SensorLayer sensors={sensors ?? []} />
         <CambodiaGridLayer />
       </Map>
