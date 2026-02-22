@@ -91,13 +91,19 @@ function SensorMapInner() {
       const map = mapRef.current;
       if (!map) return;
 
+      const hasLayer = (id: string) => Boolean(map.getLayer(id));
+
+      const safeQuery = (layers: string[]) => {
+        const existing = layers.filter((id) => hasLayer(id));
+        if (existing.length === 0) return [];
+        return map.queryRenderedFeatures(evt.point, { layers: existing });
+      };
+
       // Guard: layers may not exist yet during initial load
-      if (!map.getLayer("sensor-clusters") || !map.getLayer("sensor-circles")) return;
+      if (!hasLayer("sensor-clusters") || !hasLayer("sensor-circles")) return;
 
       // Check clusters first
-      const clusterFeatures = map.queryRenderedFeatures(evt.point, {
-        layers: ["sensor-clusters"],
-      });
+      const clusterFeatures = safeQuery(["sensor-clusters"]);
       if (clusterFeatures.length > 0) {
         const feature = clusterFeatures[0];
         const clusterId = feature.properties?.cluster_id;
@@ -124,9 +130,7 @@ function SensorMapInner() {
       }
 
       // Check individual sensors
-      const sensorFeatures = map.queryRenderedFeatures(evt.point, {
-        layers: ["sensor-circles"],
-      });
+      const sensorFeatures = safeQuery(["sensor-circles"]);
       if (sensorFeatures.length > 0) {
         const props = sensorFeatures[0].properties;
         if (props?.id) {
@@ -145,10 +149,16 @@ function SensorMapInner() {
     const map = mapRef.current;
     if (!map || !map.getLayer("sensor-circles")) return;
 
+    const hasLayer = (id: string) => Boolean(map.getLayer(id));
+
+    const safeQuery = (layers: string[]) => {
+      const existing = layers.filter((id) => hasLayer(id));
+      if (existing.length === 0) return [];
+      return map.queryRenderedFeatures(evt.point, { layers: existing });
+    };
+
     // Check sensors first — they take priority
-    const features = map.queryRenderedFeatures(evt.point, {
-      layers: ["sensor-circles"],
-    });
+    const sensorFeatures = safeQuery(["sensor-circles"]);
 
     // Clear previous sensor hover
     if (hoveredIdRef.current !== null) {
@@ -158,8 +168,8 @@ function SensorMapInner() {
       );
     }
 
-    if (features.length > 0) {
-      const id = features[0].properties?.id ?? null;
+    if (sensorFeatures.length > 0) {
+      const id = sensorFeatures[0].properties?.id ?? null;
       if (id) {
         hoveredIdRef.current = id;
         map.setFeatureState(

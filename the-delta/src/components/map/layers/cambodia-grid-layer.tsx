@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Source, Layer } from "react-map-gl/mapbox";
-import type { CircleLayerSpecification, HeatmapLayerSpecification } from "mapbox-gl";
+import type { CircleLayerSpecification, Feature, FeatureCollection, HeatmapLayerSpecification, Point } from "mapbox-gl";
 import { useMapStore } from "@/lib/stores/map-store";
 
 const METRIC_CONFIGS: Record<string, { label: string; colors: string[]; domain: number[]; heatmapWeight: unknown[] }> = {
@@ -54,51 +54,170 @@ const METRIC_CONFIGS: Record<string, { label: string; colors: string[]; domain: 
 export function CambodiaGridLayer() {
   const gridVisible = useMapStore((s) => s.gridVisible);
   const gridMetric = useMapStore((s) => s.gridMetric);
+  const [rawData, setRawData] = useState<FeatureCollection<Point> | null>(null);
 
   const config = METRIC_CONFIGS[gridMetric] || METRIC_CONFIGS["riskLevel"];
 
-  // Heatmap layer for zoomed-out view
-  const heatmapLayer: HeatmapLayerSpecification = useMemo(() => ({
-    id: "cambodia-grid-heatmap",
+  useEffect(() => {
+    let active = true;
+    fetch("/cambodia_grid.json")
+      .then((r) => r.json())
+      .then((data: FeatureCollection<Point>) => {
+        if (active) setRawData(data);
+      })
+      .catch(() => {
+        if (active) setRawData(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const convolvedData = useMemo(() => {
+    if (!rawData) return null;
+
+    const CELL_SIZE = 0.04; // aligns with generated grid spacing
+    const RISK_TO_NUM: Record<string, number> = {
+      Low: 1,
+      Medium: 2,
+      High: 3,
+      Critical: 4,
+    };
+
+    const kernel = [
+      [1, 2, 1],
+      [2, 4, 2],
+      [1, 2, 1],
+    ];
+
+    const cells = new Map<string, { gx: number; gy: number; sum: number; count: number }>();
+
+    for (const feature of rawData.features) {
+      if (feature.geometry?.type !== "Point") continue;
+      const [lon, lat] = feature.geometry.coordinates;
+      const props = (feature.properties ?? {}) as Record<string, unknown>;
+
+      let v: number | null = null;
+      if (gridMetric === "riskLevel") {
+        const risk = String(props.riskLevel ?? "");
+        v = RISK_TO_NUM[risk] ?? null;
+      } else {
+        const candidate = Number(props[gridMetric]);
+        v = Number.isFinite(candidate) ? candidate : null;
+      }
+      if (v == null) continue;
+
+      const gx = Math.floor(lon / CELL_SIZE);
+      const gy = Math.floor(lat / CELL_SIZE);
+      const key = `${gx}:${gy}`;
+
+      const existing = cells.get(key);
+      if (existing) {
+        existing.sum += v;
+        existing.count += 1;
+      } else {
+        cells.set(key, { gx, gy, sum: v, count: 1 });
+      }
+    }
+
+    const out: Feature<Point>[] = [];
+    for (const cell of cells.values()) {
+      let weighted = 0;
+      let wSum = 0;
+
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const n = cells.get(`${cell.gx + dx}:${cell.gy + dy}`);
+          if (!n) continue;
+          const w = kernel[dy + 1][dx + 1];
+          const avg = n.sum / n.count;
+          weighted += avg * w;
+          wSum += w;
+        }
+      }
+
+      if (wSum === 0) continue;
+      const smooth = weighted / wSum;
+      const centerLon = (cell.gx + 0.5) * CELL_SIZE;
+      const centerLat = (cell.gy + 0.5) * CELL_SIZE;
+
+      out.push({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [centerLon, centerLat],
+        },
+        properties: {
+          smooth,
+          density: cell.count,
+        },
+      });
+    }
+
+    return {
+      type: "FeatureCollection",
+      features: out,
+    } as FeatureCollection<Point>;
+  }, [rawData, gridMetric]);
+
+  const domainMin = config.domain[0] ?? 0;
+  const domainMax = config.domain[config.domain.length - 1] ?? 1;
+
+  const convolvedWeightExpr = useMemo(() => ([
+    "interpolate",
+    ["linear"],
+    ["get", "smooth"],
+    domainMin, 0,
+    domainMax, 1,
+  ] as any), [domainMin, domainMax]);
+
+  // Convolved gradient layer for zoomed-out view
+  const convolvedGradientLayer: HeatmapLayerSpecification = useMemo(() => ({
+    id: "cambodia-grid-convolved-gradient",
     type: "heatmap",
-    source: "cambodia-grid",
+    source: "cambodia-grid-convolved-source",
     maxzoom: 9,
     paint: {
-      "heatmap-weight": config.heatmapWeight as any,
+      "heatmap-weight": convolvedWeightExpr,
       "heatmap-intensity": [
         "interpolate",
         ["linear"],
         ["zoom"],
-        0, 1,
-        9, 3
+        0, 0.8,
+        5, 1.5,
+        9, 2.2,
       ],
       "heatmap-color": [
         "interpolate",
         ["linear"],
         ["heatmap-density"],
-        0, "rgba(255,255,255,0)",
+        0.0, "rgba(0,0,0,0)",
         0.2, config.colors[0],
         0.4, config.colors[1],
         0.6, config.colors[2],
         0.8, config.colors[3],
-        1, config.colors[config.colors.length - 1] ?? config.colors[3]
+        1.0, config.colors[config.colors.length - 1] ?? config.colors[3],
       ],
       "heatmap-radius": [
         "interpolate",
         ["linear"],
         ["zoom"],
-        0, 2,
-        9, 20
+        0, 8,
+        5, 18,
+        9, 30,
       ],
       "heatmap-opacity": [
         "interpolate",
         ["linear"],
         ["zoom"],
-        7, 1,
-        9, 0
-      ]
-    }
-  }), [config]);
+        0, 0.15,
+        4, 0.45,
+        8, 0.7,
+        9, 0,
+      ],
+    },
+  }), [config, convolvedWeightExpr]);
 
   // Circle layer for zoomed-in view
   const circleColorExpr = useMemo(() => {
@@ -124,7 +243,7 @@ export function CambodiaGridLayer() {
   const circleLayer: CircleLayerSpecification = useMemo(() => ({
     id: "cambodia-grid-circles",
     type: "circle",
-    source: "cambodia-grid",
+    source: "cambodia-grid-raw",
     minzoom: 7,
     paint: {
       "circle-radius": [
@@ -158,14 +277,25 @@ export function CambodiaGridLayer() {
   if (!gridVisible) return null;
 
   return (
-    <Source
-      id="cambodia-grid"
-      type="geojson"
-      data="/cambodia_grid.json"
-    >
-      <Layer {...heatmapLayer} />
-      <Layer {...circleLayer} />
-    </Source>
+    <>
+      {convolvedData && (
+        <Source
+          id="cambodia-grid-convolved-source"
+          type="geojson"
+          data={convolvedData}
+        >
+          <Layer {...convolvedGradientLayer} />
+        </Source>
+      )}
+
+      <Source
+        id="cambodia-grid-raw"
+        type="geojson"
+        data="/cambodia_grid.json"
+      >
+        <Layer {...circleLayer} />
+      </Source>
+    </>
   );
 }
 
