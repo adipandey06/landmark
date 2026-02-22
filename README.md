@@ -39,7 +39,7 @@ The expected costs of manufacturing such a board in large scale would be around 
         │
         │  (LoRaWAN)
         ▼
-[Edge Gateway - NTT]
+[Edge Gateway - TTN]
   - Signature verification
   - Local buffering (outage tolerance)
         │
@@ -48,6 +48,9 @@ The expected costs of manufacturing such a board in large scale would be around 
 [Primary Stack]
   ├─ Ingestion & Validation
   ├─ Time‑series Storage
+        │
+        └───────────────► [Verification Anchors]
+                         (Hashes on Solana)
   ├─ Climate & Forecast Ingest
   ├─ Correlation / Risk Models
   ├─ Recommendations Engine
@@ -55,9 +58,7 @@ The expected costs of manufacturing such a board in large scale would be around 
   └─ Audit & Reporting
         │
         ├───────────────► [Public Advisories & Farmer Dashboards]
-        │                (multilingual, verified, accessibility-first)
-        │
-        └───────────────► [Verification Anchors]
-                         (Hashes on Solana)
+                         (multilingual, verified, accessibility-first)
+
 ```
 
