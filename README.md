@@ -47,10 +47,6 @@ src/
     └── types/        # typescript types
 ```
 
-## Mock data
-
-~60 sensors across 3 regions, ~40 risk assessments, 3 NASA GIBS satellite layers, and fake blockchain signatures. Everything's generated deterministically in `src/lib/mock-data/`.
-
 ## Map stuff
 
 The map lives in `src/components/map/sensor-map.tsx` and is loaded client-side only (Mapbox needs `window`). Uses Mapbox Standard style with a dusk preset, native GeoJSON clustering, and GPU-driven hover via `feature-state`. NASA GIBS overlays sit below labels, sensors sit above.
