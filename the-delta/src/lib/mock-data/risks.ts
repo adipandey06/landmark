@@ -55,19 +55,89 @@ const NARRATIVES: Record<RiskCategory, string[]> = {
   ],
 };
 
+interface KalmanState {
+  x: number;
+  p: number;
+}
+
+function kalmanStep(
+  prev: KalmanState,
+  measurement: number,
+  processNoise: number,
+  measurementNoise: number,
+  anomalySigmaThreshold: number
+): { state: KalmanState; isAnomaly: boolean } {
+  // Predict
+  const xPred = prev.x;
+  const pPred = prev.p + processNoise;
+
+  // Innovation (residual)
+  const innovation = measurement - xPred;
+  const innovationVar = pPred + measurementNoise;
+  const innovationStd = Math.sqrt(Math.max(innovationVar, 1e-6));
+
+  const isAnomaly = Math.abs(innovation) > anomalySigmaThreshold * innovationStd;
+
+  // For anomalies, down-weight measurement sharply instead of fully trusting it.
+  const adjustedMeasurementNoise = isAnomaly ? measurementNoise * 6 : measurementNoise;
+  const s = pPred + adjustedMeasurementNoise;
+  const k = pPred / Math.max(s, 1e-6);
+
+  // Update
+  const x = xPred + k * innovation;
+  const p = (1 - k) * pPred;
+
+  return {
+    state: { x, p: Math.max(p, 1e-6) },
+    isAnomaly,
+  };
+}
+
 function generateForecast(baseScore: number): ForecastPoint[] {
   const points: ForecastPoint[] = [];
   const now = new Date();
+
+  let state: KalmanState = {
+    x: baseScore,
+    p: 18,
+  };
+
+  const processNoise = 2.8;
+  const measurementNoise = 10.5;
+  const anomalySigmaThreshold = 2.4;
+
   for (let i = 0; i < 30; i++) {
     const date = new Date(now);
     date.setDate(date.getDate() + i);
+
+    // Raw model measurement (can include occasional anomalies).
     const drift = Math.sin(i / 5) * 10 + randomInRange(-5, 5);
-    const predicted = Math.max(0, Math.min(100, baseScore + drift));
+    let measurement = baseScore + drift;
+    if (Math.random() < 0.08) {
+      // Rare anomaly spikes/dips; filter should suppress these.
+      measurement += randomInRange(-22, 22);
+    }
+    measurement = Math.max(0, Math.min(100, measurement));
+
+    const { state: nextState, isAnomaly } = kalmanStep(
+      state,
+      measurement,
+      processNoise,
+      measurementNoise,
+      anomalySigmaThreshold
+    );
+    state = nextState;
+
+    const predicted = Math.max(0, Math.min(100, state.x));
+    const sigma = Math.sqrt(state.p + measurementNoise);
+    const bandScale = isAnomaly ? 1.35 : 1.0;
+    const halfBand = sigma * 1.65 * bandScale;
+
     points.push({
       date: date.toISOString().split("T")[0],
       predicted: Math.round(predicted),
-      lower: Math.round(Math.max(0, predicted - randomInRange(8, 15))),
-      upper: Math.round(Math.min(100, predicted + randomInRange(8, 15))),
+      lower: Math.round(Math.max(0, predicted - halfBand)),
+      upper: Math.round(Math.min(100, predicted + halfBand)),
     });
   }
   return points;

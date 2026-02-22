@@ -293,4 +293,96 @@ def main():
             else:
                 print("Insert failed:", status, body)
 
+# -----------------------------------------------------------------------------
+# MQTT over TTN/TNN example 
+# -----------------------------------------------------------------------------
+# Install once on laptop: pip install paho-mqtt
+#
+# import base64
+# import json
+# import paho.mqtt.client as mqtt
+#
+# # TTN/TNN broker settings (replace with your real credentials)
+# MQTT_HOST = "eu1.cloud.thethings.network"
+# MQTT_PORT = 1883
+# APP_ID = "your-application-id"
+# API_KEY = "NNSXS.YOUR_API_KEY"
+# DEVICE_ID = "your-end-device-id"
+#
+# # Topic for downlink command to node
+# # (TTN v3 topic format)
+# DOWNLINK_TOPIC = f"v3/{APP_ID}@ttn/devices/{DEVICE_ID}/down/push"
+#
+# def send_mqtt_command_to_node(command_text: str):
+#     client = mqtt.Client(client_id=f"{APP_ID}-cmd")
+#     client.username_pw_set(username=f"{APP_ID}@ttn", password=API_KEY)
+#     client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+#
+#     # Node payload must be base64 encoded
+#     payload_b64 = base64.b64encode(command_text.encode("utf-8")).decode("utf-8")
+#
+#     # TTN downlink JSON envelope
+#     downlink = {
+#         "downlinks": [
+#             {
+#                 "f_port": 15,
+#                 "frm_payload": payload_b64,
+#                 "priority": "NORMAL",
+#             }
+#         ]
+#     }
+#
+#     client.publish(DOWNLINK_TOPIC, json.dumps(downlink), qos=1)
+#     client.disconnect()
+#
+# # Example:
+# # send_mqtt_command_to_node("START_PUMP")
+
+# -----------------------------------------------------------------------------
+# Simple LLM wrapper example for inference on historic data (after Kalman filter)
+# -----------------------------------------------------------------------------
+# Install once on laptop: pip install openai
+#
+# from openai import OpenAI
+#
+# # Assume you already have a Kalman-filtered time series, e.g.:
+# # filtered_history = [
+# #   {"ts": "2026-02-22T08:00:00Z", "temperature": 29.4, "humidity": 66.2},
+# #   {"ts": "2026-02-22T08:05:00Z", "temperature": 29.6, "humidity": 65.9},
+# #   ...
+# # ]
+#
+# def infer_from_filtered_history(filtered_history, model="gpt-4o-mini"):
+#     """
+#     Sends Kalman-filtered historical data to an LLM and returns concise
+#     inference: trend direction, anomaly likelihood, and suggested action.
+#     """
+#     client = OpenAI(api_key="YOUR_OPENAI_API_KEY")
+#
+#     prompt = {
+#         "task": "Infer trend and anomaly risk from filtered sensor history",
+#         "rules": [
+#             "Use only the provided filtered data",
+#             "Output JSON with keys: trend, anomalyRisk, confidence, recommendation",
+#             "Keep recommendation short and operational"
+#         ],
+#         "data": filtered_history[-72:]  # last 72 points
+#     }
+#
+#     resp = client.chat.completions.create(
+#         model=model,
+#         temperature=0.1,
+#         response_format={"type": "json_object"},
+#         messages=[
+#             {"role": "system", "content": "You are an IoT risk inference assistant."},
+#             {"role": "user", "content": json.dumps(prompt)},
+#         ],
+#     )
+#
+#     return json.loads(resp.choices[0].message.content)
+#
+# # Example:
+# # llm_result = infer_from_filtered_history(filtered_history)
+# # print(llm_result)
+
 main()
