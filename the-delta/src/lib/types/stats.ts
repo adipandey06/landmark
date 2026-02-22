@@ -20,3 +20,12 @@ export interface RegionStats {
   alertCount: number;
   onlinePercentage: number;
 }
+
+export interface DashboardInsights {
+  overview: string;
+  urgent_region: string;
+  patterns: string;
+  focus_areas: string[];
+  generated_at: string;
+  source?: "ai" | "fallback";
+}

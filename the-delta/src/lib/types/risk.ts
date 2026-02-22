@@ -47,3 +47,11 @@ export interface RiskFilter {
   sortBy?: "score" | "assessedAt" | "level";
   sortOrder?: "asc" | "desc";
 }
+
+export interface AiSummary {
+  summary: string;
+  trend_explanation: string;
+  anomaly_note: string;
+  recommendation: string;
+  risk_level: "low" | "moderate" | "high" | "critical";
+}
