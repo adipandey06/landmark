@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Source, Layer } from "react-map-gl/mapbox";
-import type { CircleLayerSpecification, Feature, FeatureCollection, HeatmapLayerSpecification, Point } from "mapbox-gl";
+import type { CircleLayerSpecification, HeatmapLayerSpecification } from "mapbox-gl";
+import type { Feature, FeatureCollection, Point } from "geojson";
 import { useMapStore } from "@/lib/stores/map-store";
 
 const METRIC_CONFIGS: Record<string, { label: string; colors: string[]; domain: number[]; heatmapWeight: unknown[] }> = {

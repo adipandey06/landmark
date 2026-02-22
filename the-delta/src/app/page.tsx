@@ -6,6 +6,7 @@ import { GlobalStatsGrid } from "@/components/overview/global-stats-grid";
 import { RiskTrendsChart } from "@/components/overview/risk-trends-chart";
 import { RegionSummaryCards } from "@/components/overview/region-summary-cards";
 import { VerificationSummary } from "@/components/overview/verification-summary";
+import { AiInsightsSection } from "@/components/overview/ai-insights-section";
 import { InfoBanner } from "@/components/layout/info-banner";
 
 export default function OverviewPage() {
@@ -43,6 +44,15 @@ export default function OverviewPage() {
       <section>
         <SectionHeading
           number="04"
+          title="AI Insights"
+          subtitle="Gemini-powered infrastructure analysis"
+        />
+        <AiInsightsSection />
+      </section>
+
+      <section>
+        <SectionHeading
+          number="05"
           title="Verification Status"
           subtitle="Blockchain-anchored data integrity"
         />
