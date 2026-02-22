@@ -76,10 +76,6 @@ export default function AuditPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
-      <InfoBanner>
-        Data is only useful if you can trust it. The Audit Trail acts as an unchangeable digital logbook. We use Solana blockchain technology to take a "digital fingerprint" of our data at regular intervals. This guarantees that once a sensor records a measurement, it can never be tampered with or secretly changed by anyone. It is your automated stamp of trust and truth.
-      </InfoBanner>
-
       <SectionHeading
         number="04"
         title="Audit Trail"

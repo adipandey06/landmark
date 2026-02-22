@@ -22,10 +22,6 @@ export default function RiskPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
-      <InfoBanner>
-        This is your early warning system. Just like a weather forecast, but for soil and water health. If a specific area is getting too dry or is at risk, it lights up here. The system also connects the dots—if one area starts degrading, it helps predict if neighboring areas might be next, empowering you to act before a problem spreads.
-      </InfoBanner>
-
       <SectionHeading
         number="03"
         title="AI Risk & Forecast"
