@@ -62,12 +62,43 @@ export const COUNTRY_COORDS: Record<
   Philippines: { lat: 12.88, lng: 121.77, region: "southeast-asia" },
 };
 
+const COUNTRY_BOUNDS: Record<string, BoundingBox> = {
+  Kenya: { latMin: -4.8, latMax: 5.2, lngMin: 33.6, lngMax: 41.9 },
+  Nigeria: { latMin: 4.0, latMax: 13.9, lngMin: 2.6, lngMax: 14.7 },
+  Ethiopia: { latMin: 3.4, latMax: 14.9, lngMin: 32.9, lngMax: 47.9 },
+  Ghana: { latMin: 4.6, latMax: 11.2, lngMin: -3.4, lngMax: 1.4 },
+  Uganda: { latMin: -1.7, latMax: 4.3, lngMin: 29.4, lngMax: 35.0 },
+  India: { latMin: 8.1, latMax: 34.5, lngMin: 68.1, lngMax: 97.5 },
+  Bangladesh: { latMin: 20.7, latMax: 26.7, lngMin: 88.0, lngMax: 92.8 },
+  Nepal: { latMin: 26.3, latMax: 30.5, lngMin: 80.0, lngMax: 88.3 },
+  Vietnam: { latMin: 8.2, latMax: 23.4, lngMin: 102.1, lngMax: 109.5 },
+  Cambodia: { latMin: 10.3, latMax: 14.7, lngMin: 102.3, lngMax: 107.7 },
+  Philippines: { latMin: 5.0, latMax: 19.0, lngMin: 117.0, lngMax: 126.6 },
+};
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
 export function randomCoord(country: string): { lat: number; lng: number } {
   const base = COUNTRY_COORDS[country];
   if (!base) return { lat: 0, lng: 0 };
+
+  const bounds = COUNTRY_BOUNDS[country];
+  if (!bounds) {
+    return {
+      lat: base.lat + randomInRange(-0.6, 0.6),
+      lng: base.lng + randomInRange(-0.6, 0.6),
+    };
+  }
+
+  // Gaussian-like jitter around city/country centroid, then clamp to country bbox.
+  const latJitter = (randomInRange(-1, 1) + randomInRange(-1, 1)) * 0.55;
+  const lngJitter = (randomInRange(-1, 1) + randomInRange(-1, 1)) * 0.55;
+
   return {
-    lat: base.lat + randomInRange(-2, 2),
-    lng: base.lng + randomInRange(-2, 2),
+    lat: clamp(base.lat + latJitter, bounds.latMin, bounds.latMax),
+    lng: clamp(base.lng + lngJitter, bounds.lngMin, bounds.lngMax),
   };
 }
 

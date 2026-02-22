@@ -50,7 +50,7 @@ export function ForecastChart({ data }: ForecastChartProps) {
         ))}
       </div>
       <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={10} minHeight={10} debounce={100}>
           <AreaChart data={chartData}>
             <XAxis
               dataKey="date"

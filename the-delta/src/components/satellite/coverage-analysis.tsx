@@ -31,7 +31,7 @@ export function CoverageAnalysis() {
 
       <div className="rounded-xl border border-border/50 bg-card p-5">
         <div className="h-[260px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={10} minHeight={10} debounce={100}>
             <BarChart
               data={MOCK_COVERAGE_STATS}
               layout="vertical"

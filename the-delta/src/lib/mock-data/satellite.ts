@@ -86,9 +86,9 @@ export const MOCK_FUSION_SCORES: FusionScore[] = [
   },
   {
     label: "Temperature Calibration",
-    satelliteOnlyAccuracy: 82,
-    fusedAccuracy: 97,
-    improvement: 15,
+    satelliteOnlyAccuracy: 91,
+    fusedAccuracy: 94,
+    improvement: 3,
     metric: "Bias °C",
   },
 ];

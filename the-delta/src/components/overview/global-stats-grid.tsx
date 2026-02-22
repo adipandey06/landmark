@@ -46,7 +46,7 @@ export function GlobalStatsGrid() {
             <CardContent>
               <div className="text-2xl font-bold">{formatNumber(value)}</div>
               <div className="mt-2 h-10">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={10} minHeight={10} debounce={100}>
                   <AreaChart data={sparkline}>
                     <Area
                       type="monotone"

@@ -105,7 +105,7 @@ export function SensorDetailPanel({ sensor, onClose }: SensorDetailPanelProps) {
             <Skeleton className="h-[120px] w-full rounded" />
           ) : (
             <div className="h-[120px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={10} minHeight={10} debounce={100}>
                 <AreaChart data={chartData}>
                   <XAxis
                     dataKey="time"
