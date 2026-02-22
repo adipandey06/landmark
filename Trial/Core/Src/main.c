@@ -168,6 +168,128 @@ static uint8_t DHT11_Read(float *temperature_c, float *humidity)
   return 1;
 }
 
+/*
+ * ---------------------------------------------------------------------------
+ * OPTIONAL PH + SALINITY SENSOR BOILERPLATE (COMMENTED OUT)
+ * ---------------------------------------------------------------------------
+ * Goal:
+ * - Read analog pH and salinity sensors from STM32 ADC.
+ * - Convert ADC counts -> voltage -> engineering units.
+ *
+ * Typical wiring example (adjust for your board/pins):
+ * - pH analog output       -> ADC1_INx (e.g., PA0)
+ * - Salinity analog output -> ADC1_INy (e.g., PA1)
+ * - Sensor GND             -> STM32 GND
+ * - Sensor VCC             -> 3.3V (or module-required rail)
+ *
+ * Calibration note:
+ * - The coefficients below are placeholders.
+ * - Replace with your probe/module calibration values.
+ */
+
+/*
+// 1) Add global ADC handle near UART handle:
+// ADC_HandleTypeDef hadc1;
+
+// 2) Add prototype near other MX_ prototypes:
+// static void MX_ADC1_Init(void);
+
+// 3) Call init in main() after MX_GPIO_Init():
+// MX_ADC1_Init();
+
+// 4) ADC init boilerplate
+static void MX_ADC1_Init(void)
+{
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  __HAL_RCC_ADC1_CLK_ENABLE();
+
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  // Optional: set default channel here; dynamic channel set in read helper.
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+// 5) Single-channel ADC read helper
+static uint16_t ADC_Read_Channel(uint32_t channel)
+{
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  sConfig.Channel = channel;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    return 0;
+  }
+
+  if (HAL_ADC_Start(&hadc1) != HAL_OK)
+  {
+    return 0;
+  }
+
+  if (HAL_ADC_PollForConversion(&hadc1, 10) != HAL_OK)
+  {
+    HAL_ADC_Stop(&hadc1);
+    return 0;
+  }
+
+  uint16_t raw = (uint16_t)HAL_ADC_GetValue(&hadc1);
+  HAL_ADC_Stop(&hadc1);
+  return raw;
+}
+
+// 6) Conversion helpers (placeholder calibrations)
+static float ADC_To_Voltage(uint16_t raw)
+{
+  return ((float)raw * 3.3f) / 4095.0f;
+}
+
+static float Voltage_To_pH(float voltage)
+{
+  // Example linear map; replace with your 2/3-point calibration fit.
+  // pH = 7.0 at 2.50V, slope approx -5.7 pH/V (module-dependent)
+  return 7.0f + ((2.50f - voltage) * 5.7f);
+}
+
+static float Voltage_To_Salinity(float voltage)
+{
+  // Example EC/TDS proxy placeholder; replace with module formula.
+  // Here mapped roughly to ppt-scale demo value.
+  return voltage * 1.2f;
+}
+
+// 7) In while(1), sample + print (example):
+// uint16_t raw_ph = ADC_Read_Channel(ADC_CHANNEL_0);
+// uint16_t raw_sal = ADC_Read_Channel(ADC_CHANNEL_1);
+// float ph_v = ADC_To_Voltage(raw_ph);
+// float sal_v = ADC_To_Voltage(raw_sal);
+// float ph = Voltage_To_pH(ph_v);
+// float salinity = Voltage_To_Salinity(sal_v);
+// printf("PH=%.2f, SAL=%.2f\r\n", ph, salinity);
+*/
+
 /* USER CODE END 0 */
 
 /**
